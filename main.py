@@ -8,6 +8,7 @@ from humdroid.IPC import CVServer
 from humdroid.wrappers import ScrcpyWrapper
 import signal
 import sys
+import bcstages
 
 
 SCREEN_DIR = "/tmp/humdroid/"
@@ -42,16 +43,6 @@ scrcpyClient = ScrcpyWrapper(500, 2000000)
 
 
 
-
-
-"""
-for (dirpath, dirnames, filenames) in os.walk(path):
-    for file in filenames:
-        if ".png" in file or ".jpg" in file or ".jpeg" in file:
-            file = os.path.join(path, file)
-            self.LoadImage(file, group)
-"""
-
 title = {
     "group" : 0,
     "images" : {
@@ -70,16 +61,23 @@ wednesdayStage = {
         "wednesdaystage" : "/humdroid_images/eventselect/wednesdaystage.png",
         "equip" : "/humdroid_images/eventselect/equip.png",
         "formation" : "/humdroid_images/eventselect/formation.png",
+        "leadershipYes" : "/humdroid_images/eventselect/leadershipYes.png",
         "attack" : "/humdroid_images/eventselect/attack.png",
     }
 }
 
 cats = {
     "group" : 2,
-    "images" : {
-        "maniclion" : "/humdroid_images/cats/maniclion.png"
-    }
+    "images" : {}
 }
+
+# Auto load all cats in directory
+RELATIVECATSPATH = "/humdroid_images/cats/"
+CATSPATH = HOME + RELATIVECATSPATH
+for (dirpath, dirnames, filenames) in os.walk(CATSPATH):
+    for file in filenames:
+        if ".png" in file:
+            cats["images"][file.split(".")[0]] = os.path.join(RELATIVECATSPATH, file)
 
 battle = { 
     "group" : 3,
@@ -100,16 +98,12 @@ LoadDataImages(wednesdayStage)
 LoadDataImages(cats)
 LoadDataImages(battle)
 
-for i in title["images"]:
-    print(i + " " + title["images"][i] + " " + str(requester.GetIDHash(HOME + title["images"][i])))
-
 
 # Go to main page
 while True:
     screenshot = scrcpyClient.LastFrame()
     screenshot.save(SCREEN_PATH)
     
-
     matches = requester.CompareGroup(SCREEN_PATH, title["group"])["matches"]
     if len(matches) != 0:
         m = matches[0]
@@ -157,9 +151,11 @@ def GoToStage():
                 touched = True
 
         if touched:
+            print("Found stage, clicked it.")
             break
 
 
+        print("Did not find stage. Scrolling...")
         screenSize = scrcpyClient.GetResolution()
         swipeX = screenSize[0] / 2
         swipeYtop = screenSize[1] / 6
@@ -174,6 +170,30 @@ def Equip():
 
 def Battle():
     waitUntilClicked(GetID(wednesdayStage, "attack"))
+    attackID = GetID(wednesdayStage, "attack")
+    leadershipID = GetID(wednesdayStage, "leadershipYes")
+    time.sleep(3)
+    while True:
+        screenshot = scrcpyClient.LastFrame()
+        screenshot.save(SCREEN_PATH)
+
+        matches = requester.CompareGroup(SCREEN_PATH, wednesdayStage["group"])["matches"]
+        print("Finding any potential prompts after pressing attack...")
+        done = False
+        for m in matches:
+            if m["id"] == attackID:
+                print("Clicked attack prompt once more")
+                scrcpyClient.Touch(m["x"], m["y"])
+                done = True
+            if m["id"] == leadershipID:
+                print("Clicked leadership prompt.")
+                scrcpyClient.Touch(m["x"], m["y"])
+                time.sleep(3)
+
+        if done or len(matches) == 0:
+            print("Did not find leadership prompt. Going on to battle!")
+            break
+
     matches = []
     while True:
         screenshot = scrcpyClient.LastFrame()
@@ -182,24 +202,21 @@ def Battle():
         if len(matches) > 0:
             break
 
-    clickCount = 0
-    while clickCount < 180:
-        for m in matches:
-            if m["id"] == GetID(cats, "maniclion"):
-                scrcpyClient.Touch(m["x"], m["y"])
-                clickCount += 1
 
-        time.sleep(0.2)
-
+    bcstages.xpStageInsane(matches, cats, GetID, scrcpyClient)
+        
+    print("Searching for battleok")
     done = False
     while not done:
         screenshot = scrcpyClient.LastFrame()
         screenshot.save(SCREEN_PATH)
-        matches = requester.CompareGroup(SCREEN_PATH, battle["group"])["matches"]
+        matches = requester.CompareGroup(SCREEN_PATH, battle["group"], 0.8)["matches"]
 
+        print(matches)
         for m in matches:
             scrcpyClient.Touch(m["x"], m["y"])
             if m["id"] == GetID(battle, "battleok"):
+                print("Pressed battle OK. Should be heading to menu now.")
                 done = True
 
     time.sleep(2) # Wait for transition
