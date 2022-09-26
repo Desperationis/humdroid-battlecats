@@ -1,5 +1,11 @@
 import time
 
+######################### DEBUG ############################
+def printIDs(cats, humbc):
+    for i in cats.GetTemplates():
+        print("Cat " + i + " has ID " + str(humbc.HashID(i)))
+######################### DEBUG ############################
+
 def lionCheese(matches, cats, humbc):
     clickCount = 0
     while clickCount < 50:
@@ -68,4 +74,17 @@ def xpStageInsane(matches, cats, humbc):
 
     print("Battle done.")
 
+def mondayStage(matches, cats, humbc):
+    for i in range(15):
+        print("loop " + str(i))
+        for m in matches:
+            if m["id"] == humbc.HashID(cats["ramen"]):
+                humbc.Touch(m["x"], m["y"])
 
+            elif m["id"] == humbc.HashID(cats["pogocat"]):
+                humbc.Touch(m["x"], m["y"])
+
+            elif m["id"] == humbc.HashID(cats["maniclion"]):
+                humbc.Touch(m["x"], m["y"])
+
+            time.sleep(0.3)

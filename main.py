@@ -10,6 +10,11 @@ import bcstages
 
 
 humbc = HumdroidBC()
+
+# Launch Battlecats first to force screen orientation change so the
+# scrcpy stream doesn't freak out
+humbc.RestartBC()
+time.sleep(2)
 humbc.Start()
 
 def signal_handler(signal, frame):
@@ -18,10 +23,6 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-# Launch Battlecats first to force screen orientation change so the
-# scrcpy stream doesn't freak out
-humbc.RestartBC()
-time.sleep(2)
 
 HOME = os.path.expanduser("~")
 titleGroup = TemplateGroup(0)
@@ -33,7 +34,8 @@ titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/upgrade.png")
 
 stageGroup = TemplateGroup(1)
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/start.png")
-stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/wednesdaystage.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/stages/weekend_stage.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/stages/monday_stage.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/equip.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/formation.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/leadershipYes.png")
@@ -47,6 +49,7 @@ for (dirpath, dirnames, filenames) in os.walk(CATSPATH):
         if ".png" in file:
             catFile = os.path.join(CATSPATH, file)
             catGroup.AddTemplate(catFile)
+            print("Loaded " + catFile + " as a cat.")
 
 battleGroup = TemplateGroup(3)
 battleGroup.AddTemplate(HOME + "/humdroid_images/battle/dropreward.png") 
@@ -84,7 +87,7 @@ def waitUntilClicked(ID : int, duration=-1.0):
                 return
 
 
-def GoToStage():
+def GoToStage(stage):
     print("Trying to click start...")
     startID = humbc.HashID(stageGroup["start"])
     waitUntilClicked(startID, 0.2)
@@ -92,7 +95,7 @@ def GoToStage():
     print("Clicked start")
 
     while True:
-        stageID = humbc.HashID(stageGroup["wednesdaystage"])
+        stageID = humbc.HashID(stageGroup[stage])
         humbc.Screenshot()
         touched = False
         matches = humbc.CompareID(stageID, 0.8)
@@ -109,7 +112,7 @@ def GoToStage():
         print("Did not find stage. Scrolling...")
         screenSize = humbc.GetScreenDimensions()
         swipeX = screenSize[0] / 2
-        swipeYtop = screenSize[1] / 6
+        swipeYtop = screenSize[1] / 6 * 2
         swipeYbottom = (screenSize[1] / 6) * 4
         humbc.Swipe(swipeX, swipeYbottom, swipeX, swipeYtop, 5, 0.02)
         time.sleep(1)
@@ -147,15 +150,18 @@ def Battle():
             print("Did not find leadership prompt. Going on to battle!")
             break
 
+    # Wait for any cat combo's to fade away
+    time.sleep(5)
     matches = []
     while True:
         humbc.Screenshot()
-        matches = humbc.CompareGroup(catGroup.GetGroup())
+        matches = humbc.CompareGroup(catGroup.GetGroup(), 0.7)
         if len(matches) > 0:
             break
 
 
-    bcstages.xpStageInsane(matches, catGroup, humbc)
+    #bcstages.xpStageInsane(matches, catGroup, humbc)
+    bcstages.mondayStage(matches, catGroup, humbc)
         
     print("Searching for battleok")
     done = False
@@ -173,7 +179,7 @@ def Battle():
     time.sleep(2) # Wait for transition
 
 for i in range(15):
-    GoToStage()
+    GoToStage("monday_stage")
     Equip()
     Battle()
     print("looping again")

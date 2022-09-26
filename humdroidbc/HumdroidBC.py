@@ -20,19 +20,20 @@ class HumdroidBC:
             os.makedirs(self.SCREEN_DIR)
 
         self.server = CVServer()
-        # TODO: Modify humdroid to allow requester to be Start()
+        # TODO: Modify humdroid to allow requester and scrcpyClientto be
+        # Start()
 
-
-        # Set the resolution and bitrate to be low for extreme speed. humdroid
-        # doesn't need a super high resolution image to be able to make out BC
-        # UI. This allows humdroidbc to be run on embedded devices.
-        self.scrcpyClient = ScrcpyWrapper(500, 2000000)
 
     def Start(self):
         # Start up OpenCV server, then sockets.
         self.server.Start()
         time.sleep(2)
         self.requester = CVRequester()
+
+        # Set the resolution and bitrate to be low for extreme speed. humdroid
+        # doesn't need a super high resolution image to be able to make out BC
+        # UI. This allows humdroidbc to be run on embedded devices.
+        self.scrcpyClient = ScrcpyWrapper(500, 2000000)
 
     def Close(self):
         # Close sockets first to prevent kernel from blocking port for a few
