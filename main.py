@@ -1,153 +1,104 @@
-import scrcpy
 import time
-from adbutils import adb 
-import subprocess
 import os
-from humdroid.IPC import CVRequester
-from humdroid.IPC import CVServer
-from humdroid.wrappers import ScrcpyWrapper
 import signal
 import sys
+
+from humdroid.wrappers.ScrcpyWrapper import scrcpy
+from humdroidbc.HumdroidBC import HumdroidBC
+from humdroidbc.TemplateGroup import TemplateGroup
 import bcstages
 
 
-SCREEN_DIR = "/tmp/humdroid/"
-SCREEN_PATH = SCREEN_DIR + "/capture.png"
-HOME = os.path.expanduser("~")
-
-if not os.path.exists(SCREEN_DIR):
-    os.makedirs(SCREEN_DIR)
-
-server = CVServer()
-server.Start()
-time.sleep(2)
-
-requester = CVRequester()
+humbc = HumdroidBC()
+humbc.Start()
 
 def signal_handler(signal, frame):
-    requester.Close()
-    server.Close()
+    humbc.Close()
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def adbAPI(command : str):
-    return subprocess.run("source adbAPI.bash; " + command, shell=True, executable='/bin/bash')
-
-# Launch Battlecats first to force screen orientation change so the scrcpy
-# stream doesn't freak out
-adbAPI("restartBattleCats")
+# Launch Battlecats first to force screen orientation change so the
+# scrcpy stream doesn't freak out
+humbc.RestartBC()
 time.sleep(2)
 
-scrcpyClient = ScrcpyWrapper(500, 2000000)
+HOME = os.path.expanduser("~")
+titleGroup = TemplateGroup(0)
+titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/skip.png")
+titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/play.png")
+titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/legend.png")
+titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/oklegend.png")
+titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/upgrade.png")
 
+stageGroup = TemplateGroup(1)
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/start.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/wednesdaystage.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/equip.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/formation.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/leadershipYes.png")
+stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/attack.png")
 
-
-title = {
-    "group" : 0,
-    "images" : {
-        "skip" : "/humdroid_images/titlescreen/skip.png",
-        "play" : "/humdroid_images/titlescreen/play.png",
-        "legend" : "/humdroid_images/titlescreen/legend.png",
-        "oklegend" : "/humdroid_images/titlescreen/oklegend.png",
-        "upgrade" : "/humdroid_images/titlescreen/upgrade.png"
-    }
-}
-
-wednesdayStage = {
-    "group" : 1,
-    "images" : {
-        "start" : "/humdroid_images/eventselect/start.png",
-        "wednesdaystage" : "/humdroid_images/eventselect/wednesdaystage.png",
-        "equip" : "/humdroid_images/eventselect/equip.png",
-        "formation" : "/humdroid_images/eventselect/formation.png",
-        "leadershipYes" : "/humdroid_images/eventselect/leadershipYes.png",
-        "attack" : "/humdroid_images/eventselect/attack.png",
-    }
-}
-
-cats = {
-    "group" : 2,
-    "images" : {}
-}
-
+catGroup = TemplateGroup(2)
 # Auto load all cats in directory
-RELATIVECATSPATH = "/humdroid_images/cats/"
-CATSPATH = HOME + RELATIVECATSPATH
+CATSPATH = HOME + "/humdroid_images/cats"
 for (dirpath, dirnames, filenames) in os.walk(CATSPATH):
     for file in filenames:
         if ".png" in file:
-            cats["images"][file.split(".")[0]] = os.path.join(RELATIVECATSPATH, file)
+            catFile = os.path.join(CATSPATH, file)
+            catGroup.AddTemplate(catFile)
 
-battle = { 
-    "group" : 3,
-    "images" : {
-        "dropreward" : "/humdroid_images/battle/dropreward.png",
-        "battleok" : "/humdroid_images/battle/battleok.png"
-    }
-}
+battleGroup = TemplateGroup(3)
+battleGroup.AddTemplate(HOME + "/humdroid_images/battle/dropreward.png") 
+battleGroup.AddTemplate(HOME + "/humdroid_images/battle/battleok.png") 
 
-
-# Use instead of LoadImages so that ID is reproducable
-def LoadDataImages(data):
-    for key in data["images"]:
-        requester.LoadImage(HOME + data["images"][key], data["group"])
-
-LoadDataImages(title)
-LoadDataImages(wednesdayStage)
-LoadDataImages(cats)
-LoadDataImages(battle)
+humbc.LoadTemplateGroup(titleGroup)
+humbc.LoadTemplateGroup(stageGroup)
+humbc.LoadTemplateGroup(catGroup)
+humbc.LoadTemplateGroup(battleGroup)
 
 
 # Go to main page
 while True:
-    screenshot = scrcpyClient.LastFrame()
-    screenshot.save(SCREEN_PATH)
-    
-    matches = requester.CompareGroup(SCREEN_PATH, title["group"])["matches"]
+    humbc.Screenshot()
+   
+    matches = humbc.CompareGroup(titleGroup.GetGroup())
     if len(matches) != 0:
         m = matches[0]
-        if m["id"] == requester.GetIDHash(HOME + title["images"]["upgrade"]):
+        if m["id"] == humbc.HashID(titleGroup["upgrade"]):
             break
         else:
-            scrcpyClient.Touch(m["x"], m["y"])
+            humbc.Touch(m["x"], m["y"])
 
 
 
 
 def waitUntilClicked(ID : int, duration=-1.0):
     while True:
-        screenshot = scrcpyClient.LastFrame()
-        screenshot.save(SCREEN_PATH)
+        humbc.Screenshot()
 
-        matches = requester.CompareID(SCREEN_PATH, ID)["matches"]
+        matches = humbc.CompareID(ID)
         for m in matches:
             if m["id"] == ID:
-                scrcpyClient.Touch(m["x"], m["y"], duration)
+                humbc.Touch(m["x"], m["y"], duration)
                 return
-
-
-def GetID(data, imageKey):
-    return requester.GetIDHash(HOME + data["images"][imageKey])
-      
 
 
 def GoToStage():
     print("Trying to click start...")
-    waitUntilClicked(GetID(wednesdayStage, "start"), 0.2)
+    startID = humbc.HashID(stageGroup["start"])
+    waitUntilClicked(startID, 0.2)
     time.sleep(3) # Transition
     print("Clicked start")
 
     while True:
-        ID = GetID(wednesdayStage, "wednesdaystage")
-        screenshot = scrcpyClient.LastFrame()
-        screenshot.save(SCREEN_PATH)
-
+        stageID = humbc.HashID(stageGroup["wednesdaystage"])
+        humbc.Screenshot()
         touched = False
-        matches = requester.CompareID(SCREEN_PATH, ID, 0.8)["matches"]
+        matches = humbc.CompareID(stageID, 0.8)
         for m in matches:
-            if m["id"] == ID:
-                scrcpyClient.Touch(m["x"], m["y"], 0.5)
+            if m["id"] == stageID:
+                humbc.Touch(m["x"], m["y"], 0.5)
                 touched = True
 
         if touched:
@@ -156,38 +107,40 @@ def GoToStage():
 
 
         print("Did not find stage. Scrolling...")
-        screenSize = scrcpyClient.GetResolution()
+        screenSize = humbc.GetScreenDimensions()
         swipeX = screenSize[0] / 2
         swipeYtop = screenSize[1] / 6
         swipeYbottom = (screenSize[1] / 6) * 4
-        scrcpyClient.Swipe(swipeX, swipeYbottom, swipeX, swipeYtop, 5, 0.02)
+        humbc.Swipe(swipeX, swipeYbottom, swipeX, swipeYtop, 5, 0.02)
         time.sleep(1)
 
 
 def Equip():
-    waitUntilClicked(GetID(wednesdayStage, "equip"), 2)
-    waitUntilClicked(GetID(wednesdayStage, "formation"))
+    equipID = humbc.HashID(stageGroup["equip"])
+    formationID = humbc.HashID(stageGroup["formation"])
+    waitUntilClicked(equipID, 2)
+    waitUntilClicked(formationID)
 
 def Battle():
-    waitUntilClicked(GetID(wednesdayStage, "attack"))
-    attackID = GetID(wednesdayStage, "attack")
-    leadershipID = GetID(wednesdayStage, "leadershipYes")
+    attackID = humbc.HashID(stageGroup["attack"])
+    leadershipID = humbc.HashID(stageGroup["leadershipYes"])
+
+    waitUntilClicked(attackID)
     time.sleep(3)
     while True:
-        screenshot = scrcpyClient.LastFrame()
-        screenshot.save(SCREEN_PATH)
-
-        matches = requester.CompareGroup(SCREEN_PATH, wednesdayStage["group"])["matches"]
+        humbc.Screenshot()
+        matches = humbc.CompareGroup(stageGroup.GetGroup())
         print("Finding any potential prompts after pressing attack...")
+
         done = False
         for m in matches:
             if m["id"] == attackID:
                 print("Clicked attack prompt once more")
-                scrcpyClient.Touch(m["x"], m["y"])
+                humbc.Touch(m["x"], m["y"])
                 done = True
             if m["id"] == leadershipID:
                 print("Clicked leadership prompt.")
-                scrcpyClient.Touch(m["x"], m["y"])
+                humbc.Touch(m["x"], m["y"])
                 time.sleep(3)
 
         if done or len(matches) == 0:
@@ -196,26 +149,24 @@ def Battle():
 
     matches = []
     while True:
-        screenshot = scrcpyClient.LastFrame()
-        screenshot.save(SCREEN_PATH)
-        matches = requester.CompareGroup(SCREEN_PATH, cats["group"])["matches"]
+        humbc.Screenshot()
+        matches = humbc.CompareGroup(catGroup.GetGroup())
         if len(matches) > 0:
             break
 
 
-    bcstages.xpStageInsane(matches, cats, GetID, scrcpyClient)
+    bcstages.xpStageInsane(matches, catGroup, humbc)
         
     print("Searching for battleok")
     done = False
     while not done:
-        screenshot = scrcpyClient.LastFrame()
-        screenshot.save(SCREEN_PATH)
-        matches = requester.CompareGroup(SCREEN_PATH, battle["group"], 0.8)["matches"]
+        humbc.Screenshot()
+        matches = humbc.CompareGroup(battleGroup.GetGroup(), 0.8)
 
         print(matches)
         for m in matches:
-            scrcpyClient.Touch(m["x"], m["y"])
-            if m["id"] == GetID(battle, "battleok"):
+            humbc.Touch(m["x"], m["y"])
+            if m["id"] == humbc.HashID(battleGroup["battleok"]):
                 print("Pressed battle OK. Should be heading to menu now.")
                 done = True
 
@@ -228,6 +179,4 @@ for i in range(15):
     print("looping again")
 
 
-
-scrcpyClient.Close()
-requester.Close()
+humbc.Close()
