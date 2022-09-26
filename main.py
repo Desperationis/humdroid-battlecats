@@ -17,9 +17,12 @@ humbc.RestartBC()
 time.sleep(2)
 humbc.Start()
 
-def signal_handler(signal, frame):
+def shutdown():
     humbc.Close()
     sys.exit(0)
+
+def signal_handler(signal, frame):
+    shutdown()
 signal.signal(signal.SIGINT, signal_handler)
 
 
@@ -124,7 +127,7 @@ def Equip():
     waitUntilClicked(equipID, 2)
     waitUntilClicked(formationID)
 
-def Battle():
+def Battle(leadership=False):
     attackID = humbc.HashID(stageGroup["attack"])
     leadershipID = humbc.HashID(stageGroup["leadershipYes"])
 
@@ -142,6 +145,11 @@ def Battle():
                 humbc.Touch(m["x"], m["y"])
                 done = True
             if m["id"] == leadershipID:
+                print("Leadership prompt detected.")
+                if not leadership:
+                    print("Exiting...")
+                    shutdown()
+
                 print("Clicked leadership prompt.")
                 humbc.Touch(m["x"], m["y"])
                 time.sleep(3)
