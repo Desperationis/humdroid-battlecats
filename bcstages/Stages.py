@@ -23,7 +23,7 @@ def mondayStage(matches, cats, humbc):
 
 def tuesdayStage(matches, cats, humbc):
     # Spam lion tactic
-    units = [ "crazedbahamut", "maniclion", "lion", "crazedgross" ]
+    units = [ "crazedbahamut", "maniclion", "lion" ]
     units = [ humbc.HashID(cats[unit]) for unit in units ]
 
     printIDs(cats, humbc)

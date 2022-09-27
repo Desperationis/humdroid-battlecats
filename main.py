@@ -121,7 +121,7 @@ def GoToStage(stage):
         for m in matches:
             # Stage has to be somewhere we can click; It might be hidden behind
             # a UI arrow that prevents touch
-            if m["id"] == stageID and m["y"] >= swipeYtop and m["y"] <= swipeYbottom:
+            if m["id"] == stageID and m["y"] >= swipeYtop and m["y"] <= (screenSize[1] / 6) * 5:
                 humbc.Touch(m["x"], m["y"], 0.5)
                 touched = True
 
@@ -203,7 +203,7 @@ def Battle(algorithm, leadership=False):
 
     time.sleep(2) # Wait for transition
 
-for i in range(15):
+for i in range(100):
     GoToStage("tuesday_stage")
     Equip()
     Battle(bcstages.tuesdayStage, leadership=False)
