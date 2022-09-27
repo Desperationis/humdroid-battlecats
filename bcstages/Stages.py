@@ -6,85 +6,17 @@ def printIDs(cats, humbc):
         print("Cat " + i + " has ID " + str(humbc.HashID(i)))
 ######################### DEBUG ############################
 
-def lionCheese(matches, cats, humbc):
-    clickCount = 0
-    while clickCount < 50:
-        for m in matches:
-            if m["id"] == humbc.HashID(cats["maniclion"]):
-                humbc.Touch(m["x"], m["y"])
-                clickCount += 1
-
-        time.sleep(0.2)
-
-def xpStageInsane(matches, cats, humbc):
-    time.sleep(20)
-
-    for i in range(12):
-        print("First half of battle, step " + str(i))
-        for m in matches:
-            if m["id"] == humbc.HashID(cats["ramen"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-
-            elif m["id"] == humbc.HashID(cats["pogocat"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-                
-            elif m["id"] == humbc.HashID(cats["crazederaser"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-                
-            elif m["id"] == humbc.HashID(cats["jizo"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-            
-
-        time.sleep(0.3)
-
-
-    for i in range(12):
-        print("Second half of battle, step " + str(i))
-        for m in matches:
-            if m["id"] == humbc.HashID(cats["ramen"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-
-            elif m["id"] == humbc.HashID(cats["pogocat"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-                
-            elif m["id"] == humbc.HashID(cats["crazederaser"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-                
-            elif m["id"] == humbc.HashID(cats["jizo"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-            
-            elif m["id"] == humbc.HashID(cats["eaglelegend"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-            
-            elif m["id"] == humbc.HashID(cats["crazedbahamut"]):
-                humbc.Touch(m["x"], m["y"])
-                time.sleep(0.3)
-            
-
-        time.sleep(0.3)
-
-    print("Battle done.")
-
 def mondayStage(matches, cats, humbc):
+    # Spam tactic
+    units = ["ramen", "pogocat", "maniclion"]
+    units = [ humbc.HashID(cats[unit]) for unit in units ]
+
+    printIDs(cats, humbc)
+    print("Units: " + str(units))
+    print("Matches: " + str(matches))
+
     for i in range(15):
-        print("loop " + str(i))
         for m in matches:
-            if m["id"] == humbc.HashID(cats["ramen"]):
+            if m["id"] in units:
                 humbc.Touch(m["x"], m["y"])
-
-            elif m["id"] == humbc.HashID(cats["pogocat"]):
-                humbc.Touch(m["x"], m["y"])
-
-            elif m["id"] == humbc.HashID(cats["maniclion"]):
-                humbc.Touch(m["x"], m["y"])
-
-            time.sleep(0.3)
+                time.sleep(0.3)

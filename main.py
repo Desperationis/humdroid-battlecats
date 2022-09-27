@@ -78,8 +78,12 @@ while True:
 
 
 
-
 def waitUntilClicked(ID : int, duration=-1.0):
+    """
+        Wait indefinitely until a specific template with `ID` is found and
+        clicked. `duration` is the duration of the click (used so that app can
+        process touch input)
+    """
     while True:
         humbc.Screenshot()
 
@@ -97,13 +101,20 @@ def GoToStage(stage):
     time.sleep(3) # Transition
     print("Clicked start")
 
+    screenSize = humbc.GetScreenDimensions()
+    swipeX = screenSize[0] / 2
+    swipeYtop = screenSize[1] / 6 * 2
+    swipeYbottom = (screenSize[1] / 6) * 4
+
+    stageID = humbc.HashID(stageGroup[stage])
     while True:
-        stageID = humbc.HashID(stageGroup[stage])
         humbc.Screenshot()
         touched = False
         matches = humbc.CompareID(stageID, 0.8)
         for m in matches:
-            if m["id"] == stageID:
+            # Stage has to be somewhere we can click; It might be hidden behind
+            # a UI arrow that prevents touch
+            if m["id"] == stageID and m["y"] >= swipeYtop and m["y"] <= swipeYbottom:
                 humbc.Touch(m["x"], m["y"], 0.5)
                 touched = True
 
@@ -113,11 +124,7 @@ def GoToStage(stage):
 
 
         print("Did not find stage. Scrolling...")
-        screenSize = humbc.GetScreenDimensions()
-        swipeX = screenSize[0] / 2
-        swipeYtop = screenSize[1] / 6 * 2
-        swipeYbottom = (screenSize[1] / 6) * 4
-        humbc.Swipe(swipeX, swipeYbottom, swipeX, swipeYtop, 5, 0.02)
+        humbc.Swipe(swipeX, swipeYbottom, swipeX, swipeYtop, 5, 0.03)
         time.sleep(1)
 
 
@@ -127,16 +134,16 @@ def Equip():
     waitUntilClicked(equipID, 2)
     waitUntilClicked(formationID)
 
-def Battle(leadership=False):
+def Battle(algorithm, leadership=False):
     attackID = humbc.HashID(stageGroup["attack"])
     leadershipID = humbc.HashID(stageGroup["leadershipYes"])
 
     waitUntilClicked(attackID)
     time.sleep(3)
     while True:
+        print("Finding any potential prompts after pressing attack...")
         humbc.Screenshot()
         matches = humbc.CompareGroup(stageGroup.GetGroup())
-        print("Finding any potential prompts after pressing attack...")
 
         done = False
         for m in matches:
@@ -159,7 +166,9 @@ def Battle(leadership=False):
             break
 
     # Wait for any cat combo's to fade away
-    time.sleep(5)
+    time.sleep(7)
+
+    # Scan for cats. 0.7 confidence is used since it doesn't have to be perfect
     matches = []
     while True:
         humbc.Screenshot()
@@ -167,10 +176,11 @@ def Battle(leadership=False):
         if len(matches) > 0:
             break
 
-
-    #bcstages.xpStageInsane(matches, catGroup, humbc)
-    bcstages.mondayStage(matches, catGroup, humbc)
-        
+    algorithm(matches, catGroup, humbc)
+      
+    # Most common source of error; Battle may have accidentally pressed
+    # buttons.
+    # TODO: Fix this
     print("Searching for battleok")
     done = False
     while not done:
@@ -189,7 +199,7 @@ def Battle(leadership=False):
 for i in range(15):
     GoToStage("monday_stage")
     Equip()
-    Battle()
+    Battle(bcstages.mondayStage, leadership=False)
     print("looping again")
 
 
