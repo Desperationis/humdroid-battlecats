@@ -15,7 +15,7 @@ humbc = HumdroidBC()
 # scrcpy stream doesn't freak out
 humbc.RestartBC()
 time.sleep(2)
-humbc.Start()
+humbc.Start(server=False)
 
 def shutdown():
     humbc.Close()
@@ -206,7 +206,7 @@ def Battle(algorithm, leadership=False):
 for i in range(15):
     GoToStage("tuesday_stage")
     Equip()
-    Battle(bcstages.tuesdayStage, leadership=False)
+    Battle(bcstages.tuesdayStage, leadership=True)
     print("looping again")
 
 

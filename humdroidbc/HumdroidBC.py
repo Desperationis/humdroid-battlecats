@@ -24,9 +24,10 @@ class HumdroidBC:
         # Start()
 
 
-    def Start(self):
+    def Start(self, server=True):
         # Start up OpenCV server, then sockets.
-        self.server.Start()
+        if server:
+            self.server.Start()
         time.sleep(2)
         self.requester = CVRequester()
 

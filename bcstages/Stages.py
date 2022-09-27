@@ -30,7 +30,7 @@ def tuesdayStage(matches, cats, humbc):
     print("Units: " + str(units))
     print("Matches: " + str(matches))
 
-    for i in range(15):
+    for i in range(19):
         for m in matches:
             if m["id"] in units:
                 humbc.Touch(m["x"], m["y"])
