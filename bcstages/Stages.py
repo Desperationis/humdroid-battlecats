@@ -20,3 +20,18 @@ def mondayStage(matches, cats, humbc):
             if m["id"] in units:
                 humbc.Touch(m["x"], m["y"])
                 time.sleep(0.3)
+
+def tuesdayStage(matches, cats, humbc):
+    # Spam lion tactic
+    units = [ "crazedbahamut", "maniclion"]
+    units = [ humbc.HashID(cats[unit]) for unit in units ]
+
+    printIDs(cats, humbc)
+    print("Units: " + str(units))
+    print("Matches: " + str(matches))
+
+    for i in range(15):
+        for m in matches:
+            if m["id"] in units:
+                humbc.Touch(m["x"], m["y"])
+                time.sleep(0.3)

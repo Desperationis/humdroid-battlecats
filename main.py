@@ -37,12 +37,19 @@ titleGroup.AddTemplate(HOME + "/humdroid_images/titlescreen/upgrade.png")
 
 stageGroup = TemplateGroup(1)
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/start.png")
-stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/stages/weekend_stage.png")
-stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/stages/monday_stage.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/equip.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/formation.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/leadershipYes.png")
 stageGroup.AddTemplate(HOME + "/humdroid_images/eventselect/attack.png")
+# Auto load all stages
+STAGEPATH = HOME + "/humdroid_images/eventselect/stages"
+for (dirpath, dirnames, filenames) in os.walk(STAGEPATH):
+    for file in filenames:
+        if ".png" in file:
+            stageFile = os.path.join(STAGEPATH, file)
+            stageGroup.AddTemplate(stageFile)
+            print("Loaded " + stageFile + " as a stage.")
+
 
 catGroup = TemplateGroup(2)
 # Auto load all cats in directory
@@ -197,9 +204,9 @@ def Battle(algorithm, leadership=False):
     time.sleep(2) # Wait for transition
 
 for i in range(15):
-    GoToStage("monday_stage")
+    GoToStage("tuesday_stage")
     Equip()
-    Battle(bcstages.mondayStage, leadership=False)
+    Battle(bcstages.tuesdayStage, leadership=False)
     print("looping again")
 
 
