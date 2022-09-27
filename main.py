@@ -206,7 +206,7 @@ def Battle(algorithm, leadership=False):
 for i in range(15):
     GoToStage("tuesday_stage")
     Equip()
-    Battle(bcstages.tuesdayStage, leadership=True)
+    Battle(bcstages.tuesdayStage, leadership=False)
     print("looping again")
 
 
