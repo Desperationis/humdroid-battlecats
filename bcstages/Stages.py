@@ -50,3 +50,34 @@ def wednesdayStage(matches, cats, humbc):
             if m["id"] in units:
                 humbc.Touch(m["x"], m["y"])
                 time.sleep(0.3)
+# laksjdf
+def growingBlue(matches, cats, humbc):
+    units = [ "ramen", "paris" ]
+    units = [ humbc.HashID(cats[unit]) for unit in units ]
+
+    printIDs(cats, humbc)
+    print("Units: " + str(units))
+    print("Matches: " + str(matches))
+
+    time.sleep(8)
+
+    for i in range(30):
+        for m in matches:
+            if m["id"] in units:
+                humbc.Touch(m["x"], m["y"])
+                time.sleep(0.3)
+
+    units = [ "ramen", "paris", "psychomaniac", "eaglelegend", "axe_uber" ]
+    units = [ humbc.HashID(cats[unit]) for unit in units ]
+
+    printIDs(cats, humbc)
+    print("Units: " + str(units))
+    print("Matches: " + str(matches))
+
+    time.sleep(8)
+
+    for i in range(20):
+        for m in matches:
+            if m["id"] in units:
+                humbc.Touch(m["x"], m["y"])
+                time.sleep(0.3)
