@@ -204,9 +204,9 @@ def Battle(algorithm, leadership=False):
     time.sleep(2) # Wait for transition
 
 for i in range(100):
-    GoToStage("growing_blue")
+    GoToStage("growing_yellow")
     Equip()
-    Battle(bcstages.growingBlue, leadership=False)
+    Battle(bcstages.growingYellow, leadership=False)
     print("looping again")
 
 
